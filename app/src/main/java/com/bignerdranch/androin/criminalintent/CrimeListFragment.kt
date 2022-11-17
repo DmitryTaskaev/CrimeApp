@@ -42,11 +42,7 @@ class CrimeListFragment : Fragment() {
 
 
 
-    companion object {
-        fun newInstance(): CrimeListFragment {
-            return CrimeListFragment()
-        }
-    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -72,6 +68,17 @@ class CrimeListFragment : Fragment() {
             })
     }
 
+    override fun onStart() {
+        super.onStart()
+        crimeListViewModel.crimeListLiveData.observe(
+            viewLifecycleOwner, Observer { crimes ->
+                crimes?.let {
+                    Log.i(TAG,"Got crimeLiveData ${crimes.size}")
+                    updateUI(crimes)
+                }
+            }
+        )
+    }
     override fun onDetach() {
         super.onDetach()
         callbacks = null
@@ -99,13 +106,9 @@ class CrimeListFragment : Fragment() {
         private val titleTextView: TextView = itemView.findViewById(R.id.crime_title)
         private val dateTextView: TextView = itemView.findViewById(R.id.crime_date)
         private val solvedImageView: ImageView = itemView.findViewById(R.id.crime_solved)
-
-
         init {
             itemView.setOnClickListener(this)
         }
-
-
         fun bind(crime: Crime) {
             this.crime = crime
             titleTextView.text = this.crime.title
@@ -115,15 +118,10 @@ class CrimeListFragment : Fragment() {
             } else {
                 View.GONE
             }
-
         }
-
         override fun onClick(v: View) {
             callbacks?.onCrimeSelected(crime.id)
-
         }
-
-
     }
 
 
@@ -139,9 +137,17 @@ class CrimeListFragment : Fragment() {
         override fun getItemCount() = crimes.size
     }
     private fun updateUI(crimes: List<Crime>)  {
-        adapter = CrimeAdapter(crimes)
+        adapter?.let {
+            it.crimes = crimes
+        } ?: kotlin.run {
+            adapter = CrimeAdapter(crimes)
+        }
         crimeRecyclerView.adapter = adapter
     }
 
-
+    companion object {
+        fun newInstance(): CrimeListFragment {
+            return CrimeListFragment()
+        }
+    }
 }
